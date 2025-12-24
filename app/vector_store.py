@@ -1,47 +1,28 @@
-# app/vector_store.py
-
-"""
-This file:
-- Creates a FAISS index
-- Stores embeddings
-- Performs similarity search
-"""
-
 import faiss
 import numpy as np
 
-
-class FAISSVectorStore:
-    def __init__(self, embedding_dim: int):
-        # L2 distance index (works well with MiniLM)
+class VectorStore:
+    def __init__(self, embedding_dim):
         self.index = faiss.IndexFlatL2(embedding_dim)
-        self.text_chunks = []   # stores actual chunk text
-        self.metadata = []      # stores PDF name etc.
-
-    def add_embeddings(self, embeddings, chunks, pdf_name):
-        """
-        Adds embeddings + metadata to FAISS index.
-        """
+        self.chunks = []
+    
+    def add(self, embeddings, chunks):
+        """Add embeddings to FAISS index"""
         vectors = np.array(embeddings).astype("float32")
-
         self.index.add(vectors)
-
-        for chunk in chunks:
-            self.text_chunks.append(chunk)
-            self.metadata.append(pdf_name)
-
-    def search(self, query_embedding, top_k=5):
-        """
-        Searches FAISS index and returns top-k results.
-        """
+        self.chunks = chunks
+    
+    def search(self, query_embedding, top_k=3):
+        """Search for similar chunks"""
         query_vector = np.array([query_embedding]).astype("float32")
         distances, indices = self.index.search(query_vector, top_k)
-
+        
         results = []
-        for idx in indices[0]:
-            results.append({
-                "text": self.text_chunks[idx],
-                "source": self.metadata[idx]
-            })
-
+        for dist, idx in zip(distances[0], indices[0]):
+            if idx >= 0 and idx < len(self.chunks):
+                results.append({
+                    "text": self.chunks[idx],
+                    "distance": float(dist)
+                })
+        
         return results
