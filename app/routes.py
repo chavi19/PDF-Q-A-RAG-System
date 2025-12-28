@@ -38,16 +38,16 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(pdf_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # ✅ Step 1: Extract raw text & chunk
+    # Step 1: Extract raw text & chunk
     chunks = load_pdf(str(pdf_path))
 
     if not chunks:
         raise HTTPException(status_code=400, detail="No text extracted from PDF")
 
-    # ✅ Step 3: Embeddings
+    # Step 3: Embeddings
     embeddings = embedding_model.embed_texts(chunks)
 
-    # ✅ Step 4: Vector store
+    # Step 4: Vector store: Vector → chunk mapping
     vector_store = VectorStore(embedding_dim=len(embeddings[0]))
     vector_store.add(embeddings, chunks)
 
@@ -66,12 +66,12 @@ async def ask_question(payload: dict):
     if vector_store is None:
         raise HTTPException(status_code=400, detail="No PDF uploaded")
     
-    question = payload.get("question", "").strip()
+    question = payload.get("question", "").strip()      #Check missing data
     
     if not question:
         raise HTTPException(status_code=400, detail="Question is required")
     
-    # Embed question
+    # Embed question: Now both: Question & PDF chunks are in the same vector space.
     query_embedding = embedding_model.embed_query(question)
     
     # Retrieve similar chunks (THIS IS CONTEXT)
