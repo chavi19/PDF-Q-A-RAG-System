@@ -8,6 +8,7 @@ from app.embeddings import EmbeddingModel
 from app.vector_store import VectorStore
 from app.qa_engine import QAEngine
 
+
 router = APIRouter()
 
 # Global variables
@@ -22,38 +23,41 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-    global vector_store, active_pdf
-    
-    # Clear old files
+    global vector_store, active_pdf     # session_id -> FAISSVectorStore
+
+    # Validate file type FIRST
+    if not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are supported")
+
+    # Clear old PDFs
     for old_file in UPLOAD_DIR.glob("*.pdf"):
         old_file.unlink()
-    
-    # Save new file
+
+    # Save new file, Now the PDF exists on disk.
     pdf_path = UPLOAD_DIR / file.filename
     with open(pdf_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
-    
-    # Extract text and chunk
+
+    # ✅ Step 1: Extract raw text & chunk
     chunks = load_pdf(str(pdf_path))
-    
+
     if not chunks:
         raise HTTPException(status_code=400, detail="No text extracted from PDF")
-    
-    # Create embeddings
+
+    # ✅ Step 3: Embeddings
     embeddings = embedding_model.embed_texts(chunks)
-    
-    # Build vector store
+
+    # ✅ Step 4: Vector store
     vector_store = VectorStore(embedding_dim=len(embeddings[0]))
     vector_store.add(embeddings, chunks)
-    
+
     active_pdf = file.filename
-    
+
     return {
         "message": "PDF uploaded successfully",
         "filename": active_pdf,
         "chunks": len(chunks)
     }
-
 
 @router.post("/ask")
 async def ask_question(payload: dict):
@@ -70,7 +74,7 @@ async def ask_question(payload: dict):
     # Embed question
     query_embedding = embedding_model.embed_query(question)
     
-    # Retrieve chunks
+    # Retrieve similar chunks (THIS IS CONTEXT)
     results = vector_store.search(query_embedding, top_k=3)
     
     if not results:
@@ -87,3 +91,8 @@ async def ask_question(payload: dict):
         "source": active_pdf,
         "chunks_found": len(results)
     }
+""" async  → non-blocking request handling
+global → modify shared app-level variables
+/upload → process PDF & build FAISS index
+/ask → answer questions using RAG
+ """

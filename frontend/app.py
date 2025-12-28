@@ -1,5 +1,5 @@
 import streamlit as st
-import requests
+import requests     #Used to call backend APIs, Sends PDF & questions to FastAPI
 
 BACKEND_URL = "http://localhost:8000"
 
@@ -11,7 +11,7 @@ if "uploaded" not in st.session_state:
     st.session_state.uploaded = False
 
 # Upload section
-st.subheader("1️⃣ Upload PDF")
+st.subheader("Upload PDF")
 uploaded_file = st.file_uploader("Choose a PDF", type="pdf")
 
 if uploaded_file and st.button("Process PDF"):
@@ -32,7 +32,7 @@ if uploaded_file and st.button("Process PDF"):
 
 # Question section
 if st.session_state.uploaded:
-    st.subheader("2️⃣ Ask Question")
+    st.subheader("Ask Question")
     question = st.text_input("Your question")
     
     if st.button("Get Answer"):
@@ -56,3 +56,4 @@ if st.session_state.uploaded:
                     st.error(f"Error: {e}")
         else:
             st.warning("Please enter a question")
+#venv\Scripts\activate , streamlit run frontend/app.py
