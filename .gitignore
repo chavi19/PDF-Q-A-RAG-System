@@ -1,6 +1,41 @@
+# Python
 venv/
+env/
+.venv/
 __pycache__/
-.env
 *.pyc
-.faiss
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
+# Environment
+.env
+
+# Data files
+data/uploaded_pdfs/*.pdf
+*.faiss
+vector_metadata.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+.dockerignore
+
+# Jupyter
+.ipynb_checkpoints/

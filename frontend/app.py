@@ -1,7 +1,8 @@
 import streamlit as st
 import requests     #Used to call backend APIs, Sends PDF & questions to FastAPI
+import os
 
-BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 st.set_page_config(page_title="PDF Q&A", layout="wide")
 st.title("📄 PDF Question Answering")
